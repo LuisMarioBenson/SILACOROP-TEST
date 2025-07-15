@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SILACORP - Cursos de Brigada de Emergencia</title>
+    <!-- CDN de Tailwind CSS para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CDN de Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CDN de jsPDF para la generación de PDFs en el cliente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Importa la fuente Inter de Google Fonts para una tipografía moderna */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        
+        /* Estilos base para el cuerpo de la página */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Fondo azul claro muy sutil */
+            color: #333; /* Color de texto principal */
+        }
+        
+        /* Colores principales para la marca SILACORP */
+        .silacorp-red-bg {
+            background-color: #e53e3e; /* Rojo vibrante */
+        }
+        .silacorp-red-text {
+            color: #e53e3e; /* Rojo vibrante para texto */
+        }
+        .silacorp-blue-bg {
+            background-color: #3182ce; /* Azul corporativo */
+        }
+        .silacorp-blue-text {
+            color: #3182ce; /* Azul corporativo para texto */
+        }
+
+        /* Estilos para botones primarios */
+        .btn-primary {
+            background-color: #e53e3e; /* Rojo */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #c53030; /* Rojo más oscuro al pasar el ratón */
+            transform: translateY(-2px); /* Pequeño efecto de elevación */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary:active {
+            transform: translateY(0); /* Vuelve a su posición original al hacer clic */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos para campos de formulario */
+        .form-input {
+            border: 1px solid #a0aec0; /* Borde gris azulado */
+            border-radius: 0.5rem; /* Bordes más redondeados */
+            padding: 0.75rem 1rem; /* Espaciado interno */
+            width: 100%; /* Ancho completo */
+            box-sizing: border-box; /* Incluye padding y borde en el ancho */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: #ffffff; /* Fondo blanco */
+        }
+        .form-input:focus {
+            border-color: #3182ce; /* Borde azul al enfocar */
+            outline: none; /* Elimina el contorno predeterminado */
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.25); /* Sombra suave azul al enfocar */
+        }
+
+        /* Estilos para el mensaje de éxito/error */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1.5rem 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: white;
+            display: none; /* Oculto por defecto */
+            animation: fadeInOut 3s forwards; /* Animación para aparecer y desaparecer */
+        }
+        .message-box.success {
+            background-color: #48bb78; /* Verde para éxito */
+        }
+        .message-box.error {
+            background-color: #e53e3e; /* Rojo para error */
+        }
+
+        /* Animación para el mensaje */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+
+        /* Estilos para las tarjetas de curso */
+        .course-card {
+            border: 1px solid #e2e8f0; /* Borde gris claro */
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Bordes más redondeados */
+            padding: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombra suave */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .course-card:hover {
+            transform: translateY(-5px); /* Efecto de elevación al pasar el ratón */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
+        }
+
+        /* Estilos para los iconos de redes sociales en el footer */
+        .footer-icon-link:hover {
+            color: #3182ce; /* Azul al pasar el ratón sobre los iconos del footer */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Encabezado de la página -->
+    <header class="silacorp-red-bg text-white p-6 shadow-lg">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center mb-4 md:mb-0">
+                <!-- Espacio para el logo de la marca -->
+                <img id="logo" src="https://placehold.co/100x100/e53e3e/ffffff?text=SILACORP" alt="Logo de SILACORP" class="h-24 w-24 rounded-full border-4 border-white mr-4 object-cover">
+                <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight">SILACORP</h1>
+            </div>
+            <!-- Barra de navegación -->
+            <nav class="text-lg font-semibold mt-4 md:mt-0">
+                <ul class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">
+                    <li><a href="#about" class="hover:underline hover:text-blue-300 transition-colors duration-200">Nosotros</a></li>
+                    <li><a href="#courses" class="hover:underline hover:text-blue-300 transition-colors duration-200">Cursos</a></li>
+                    <li><a href="#register" class="hover:underline hover:text-blue-300 transition-colors duration-200">Inscripción</a></li>
+                    <li><a href="#contact" class="hover:underline hover:text-blue-300 transition-colors duration-200">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido principal de la aplicación -->
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <!-- Sección "Acerca de SILACORP" -->
+        <section id="about" class="mb-16 bg-white p-6 md:p-8 rounded-lg shadow-md">
+            <h2 class="text-4xl md:text-5xl font-bold silacorp-red-text mb-6 text-center">Acerca de SILACORP</h2>
+            <p class="text-lg text-gray-700 mb-4 leading-relaxed">
+                SILACORP es una organización líder en la capacitación y formación especializada en brigadas de emergencia y seguridad. Nos enorgullece colaborar estrechamente con instituciones de renombre para ofrecer programas educativos de la más alta calidad, diseñados para preparar a individuos y equipos a responder eficazmente ante cualquier situación crítica.
+            </p>
+            <p class="text-lg text-gray-700 mb-4 leading-relaxed">
+                Todos nuestros cursos son impartidos en alianza estratégica con la <strong class="silacorp-red-text">Cruz Roja Mexicana</strong>, lo que garantiza el cumplimiento de los más estrictos estándares de excelencia y un reconocimiento a nivel nacional e internacional.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+                <div>
+                    <h3 class="text-2xl font-semibold silacorp-blue-text mb-3">Misión</h3>
+                    <p class="text-gray-600">Capacitar y empoderar a la comunidad y organizaciones con conocimientos y habilidades esenciales en gestión de emergencias, promoviendo una cultura de prevención, respuesta efectiva y resiliencia.</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold silacorp-blue-text mb-3">Visión</h3>
+                    <p class="text-gray-600">Ser la institución líder en Latinoamérica en formación integral de brigadas de emergencia, reconocida por la excelencia de sus programas, la innovación pedagógica y el impacto positivo en la seguridad y bienestar social.</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold silacorp-blue-text mb-3">Valores</h3>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li>Compromiso: Con la seguridad y el desarrollo de nuestros participantes.</li>
+                        <li>Excelencia: En la calidad de nuestros contenidos y metodologías.</li>
+                        <li>Solidaridad: Actuando con empatía y apoyo hacia la comunidad.</li>
+                        <li>Integridad: Con transparencia y ética en todas nuestras acciones.</li>
+                        <li>Responsabilidad: En la formación de líderes capaces de salvar vidas.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Cursos Ofrecidos -->
+        <section id="courses" class="mb-16 bg-white p-6 md:p-8 rounded-lg shadow-md">
+            <h2 class="text-4xl md:text-5xl font-bold silacorp-red-text mb-6 text-center">Nuestros Cursos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Tarjeta de Curso: Brigada de Emergencias -->
+                <div class="course-card">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-3">Brigada de Emergencias</h3>
+                    <p class="text-gray-600 mb-4">Formación integral para la organización, coordinación y actuación eficaz de brigadas en diversas situaciones de emergencia, incluyendo evacuación, búsqueda y rescate.</p>
+                    <p class="text-lg font-bold silacorp-red-text">Objetivo del Curso:</p>
+                    <p class="text-gray-600">Preparar a los participantes para coordinar y ejecutar acciones de respuesta rápida y segura ante diversas contingencias (sismos, inundaciones, etc.), minimizando riesgos y salvaguardando vidas y bienes.</p>
+                </div>
+                <!-- Tarjeta de Curso: Primeros Auxilios -->
+                <div class="course-card">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-3">Primeros Auxilios</h3>
+                    <p class="text-gray-600 mb-4">Capacitación en técnicas básicas y avanzadas de primeros auxilios para atender lesiones y enfermedades repentinas, brindando asistencia vital antes de la llegada de personal médico profesional.</p>
+                    <p class="text-lg font-bold silacorp-red-text">Objetivo del Curso:</p>
+                    <p class="text-gray-600">Dotar a los participantes de las habilidades necesarias para brindar atención inmediata y adecuada a personas lesionadas o enfermas, estabilizando su condición y previniendo complicaciones mayores.</p>
+                </div>
+                <!-- Tarjeta de Curso: Combate contra Incendios -->
+                <div class="course-card">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-3">Combate contra Incendios</h3>
+                    <p class="text-gray-600 mb-4">Entrenamiento práctico y teórico en prevención, identificación de riesgos, clasificación de fuegos, uso correcto de extintores y equipos de protección personal para el control de incendios.</p>
+                    <p class="text-lg font-bold silacorp-red-text">Objetivo del Curso:</p>
+                    <p class="text-gray-600">Enseñar a los participantes a prevenir incendios y a actuar de manera segura y eficaz en caso de conflagración, utilizando el equipo adecuado y siguiendo protocolos de seguridad.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección del Formulario de Inscripción -->
+        <section id="register" class="mb-16 bg-white p-6 md:p-8 rounded-lg shadow-md">
+            <h2 class="text-4xl md:text-5xl font-bold silacorp-red-text mb-6 text-center">Formulario de Inscripción</h2>
+            <form id="registrationForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Campo: Nombre Completo -->
+                <div>
+                    <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Nombre Completo:</label>
+                    <input type="text" id="name" name="name" class="form-input" required placeholder="Ej. Juan Pérez">
+                </div>
+                <!-- Campo: Fecha de Nacimiento -->
+                <div>
+                    <label for="dob" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Nacimiento:</label>
+                    <input type="date" id="dob" name="dob" class="form-input" required>
+                </div>
+                <!-- Campo: Selección de Curso -->
+                <div>
+                    <label for="course" class="block text-gray-700 text-sm font-bold mb-2">Selecciona el Curso al que te inscribe:</label>
+                    <select id="course" name="course" class="form-input" required>
+                        <option value="">-- Seleccione un curso --</option>
+                        <option value="Brigada de Emergencias">Brigada de Emergencias</option>
+                        <option value="Primeros Auxilios">Primeros Auxilios</option>
+                        <option value="Combate contra Incendios">Combate contra Incendios</option>
+                    </select>
+                </div>
+                <!-- Campo: Modalidad del Curso -->
+                <div>
+                    <label for="modality" class="block text-gray-700 text-sm font-bold mb-2">Modalidad del Curso:</label>
+                    <select id="modality" name="modality" class="form-input" required>
+                        <option value="">-- Seleccione una modalidad --</option>
+                        <option value="Presencial">Presencial</option>
+                        <option value="Virtual">Virtual</option>
+                    </select>
+                </div>
+                <!-- Campo: Teléfono (10 dígitos) -->
+                <div>
+                    <label for="phone" class="block text-gray-700 text-sm font-bold mb-2">Teléfono (10 dígitos):</label>
+                    <input type="tel" id="phone" name="phone" class="form-input" pattern="[0-9]{10}" maxlength="10" title="Por favor, ingrese exactamente 10 dígitos numéricos" required placeholder="Ej. 5512345678">
+                </div>
+                <!-- Campo: Email -->
+                <div>
+                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+                    <input type="email" id="email" name="email" class="form-input" required placeholder="Ej. tu.correo@example.com">
+                </div>
+                <!-- Campo: Ciudad -->
+                <div>
+                    <label for="city" class="block text-gray-700 text-sm font-bold mb-2">Ciudad:</label>
+                    <input type="text" id="city" name="city" class="form-input" required placeholder="Ej. Monterrey">
+                </div>
+                <!-- Campo: Estado (Lista de estados de México) -->
+                <div>
+                    <label for="state" class="block text-gray-700 text-sm font-bold mb-2">Estado:</label>
+                    <select id="state" name="state" class="form-input" required>
+                        <option value="">-- Seleccione un estado --</option>
+                        <!-- Las opciones de estados se llenarán con JavaScript -->
+                    </select>
+                </div>
+                <!-- Campo: Comentarios -->
+                <div class="md:col-span-2">
+                    <label for="comments" class="block text-gray-700 text-sm font-bold mb-2">Comentarios:</label>
+                    <textarea id="comments" name="comments" rows="4" class="form-input" placeholder="¿Tienes alguna pregunta o comentario adicional?"></textarea>
+                </div>
+                <!-- Campo: Adjuntar CV -->
+                <div class="md:col-span-2">
+                    <label for="cvUpload" class="block text-gray-700 text-sm font-bold mb-2">Adjuntar CV (PDF, DOCX):</label>
+                    <input type="file" id="cvUpload" name="cvUpload" accept=".pdf,.doc,.docx" class="form-input p-2" required>
+                </div>
+
+                <!-- Botones de acción del formulario -->
+                <div class="md:col-span-2 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mt-6">
+                    <button type="submit" class="btn-primary w-full sm:w-auto">
+                        <i class="fas fa-user-plus mr-2"></i> Generar Inscripción
+                    </button>
+                    <button type="button" id="exportPdfBtn" class="btn-primary silacorp-blue-bg hover:bg-blue-700 w-full sm:w-auto">
+                        <i class="fas fa-file-pdf mr-2"></i> Exportar Recibo (PDF)
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Mensaje de éxito/error (oculto por defecto) -->
+            <div id="messageBox" class="message-box hidden">
+                <p id="messageText"></p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pie de página con enlaces de contacto y redes sociales -->
+    <footer id="contact" class="bg-gray-800 text-white p-8 text-center">
+        <div class="container mx-auto">
+            <h3 class="text-2xl font-bold mb-4">Contáctanos</h3>
+            <div class="flex justify-center space-x-6 text-3xl mb-6">
+                <!-- Iconos de Redes Sociales -->
+                <a href="https://www.facebook.com/luis.benson.52/" target="_blank" aria-label="Facebook" class="footer-icon-link transition-colors duration-300"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/silacorp" target="_blank" aria-label="Instagram" class="footer-icon-link transition-colors duration-300"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@silacorp" target="_blank" aria-label="TikTok" class="footer-icon-link transition-colors duration-300"><i class="fab fa-tiktok"></i></a>
+                <a href="https://www.linkedin.com/company/silacorp" target="_blank" aria-label="LinkedIn" class="footer-icon-link transition-colors duration-300"><i class="fab fa-linkedin-in"></i></a>
+                <!-- Botón de WhatsApp -->
+                <a href="https://wa.me/521XXXXXXXXXX" target="_blank" aria-label="WhatsApp" class="footer-icon-link transition-colors duration-300">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+            <p class="text-gray-400 text-sm">&copy; 2023 SILACORP. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // JavaScript para manejar el formulario, la generación de PDF y el contenido dinámico
+        document.addEventListener('DOMContentLoaded', () => {
+            const registrationForm = document.getElementById('registrationForm');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const stateSelect = document.getElementById('state');
+
+            // Función para mostrar mensajes temporales (éxito/error)
+            function showMessage(message, type = 'error') {
+                messageText.textContent = message;
+                messageBox.classList.remove('hidden', 'success', 'error');
+                messageBox.classList.add(type);
+                messageBox.style.display = 'block'; // Asegura que se muestre
+                // La animación @keyframes fadeInOut se encarga de ocultarlo después de 3s
+            }
+
+            // Lista de estados de México para el campo de selección
+            const mexicanStates = [
+                "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",
+                "Coahuila de Zaragoza", "Colima", "Ciudad de México", "Durango", "Guanajuato", "Guerrero",
+                "Hidalgo", "Jalisco", "México", "Michoacán de Ocampo", "Morelos", "Nayarit", "Nuevo León",
+                "Oaxaca", "Puebla", "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
+                "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz de Ignacio de la Llave", "Yucatán", "Zacatecas"
+            ];
+
+            // Rellenar el campo de selección de estados
+            mexicanStates.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                stateSelect.appendChild(option);
+            });
+
+            // Manejar el envío del formulario
+            registrationForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // Evita el envío predeterminado del formulario
+
+                // Validar que el número de teléfono tenga exactamente 10 dígitos
+                const phoneInput = document.getElementById('phone');
+                if (phoneInput.value.length !== 10) {
+                    showMessage('El número de teléfono debe tener exactamente 10 dígitos.', 'error');
+                    return;
+                }
+
+                // Validar que el CV haya sido adjuntado
+                const cvUpload = document.getElementById('cvUpload');
+                if (cvUpload.files.length === 0) {
+                    showMessage('Por favor, adjunte su CV.', 'error');
+                    return;
+                }
+
+                // Mostrar mensaje de éxito
+                showMessage('¡Se ha inscrito correctamente!', 'success');
+
+                // Limpiar el formulario automáticamente después de un breve retraso
+                setTimeout(() => {
+                    registrationForm.reset();
+                }, 500); // Pequeño retraso para que el usuario vea el mensaje
+            });
+
+            // Manejar la exportación del recibo a PDF
+            exportPdfBtn.addEventListener('click', () => {
+                // Obtener los valores actuales del formulario
+                const name = document.getElementById('name').value;
+                const dob = document.getElementById('dob').value;
+                const course = document.getElementById('course').value;
+                const modality = document.getElementById('modality').value;
+                const phone = document.getElementById('phone').value;
+                const email = document.getElementById('email').value;
+                const city = document.getElementById('city').value;
+                const state = document.getElementById('state').value;
+                const comments = document.getElementById('comments').value;
+                const cvFileName = document.getElementById('cvUpload').files[0] ? document.getElementById('cvUpload').files[0].name : 'No adjuntado';
+
+                // Validar que los campos obligatorios estén llenos antes de exportar
+                if (!name || !dob || !course || !modality || !phone || !email || !city || !state || cvFileName === 'No adjuntado') {
+                    showMessage('Por favor, complete todos los campos obligatorios del formulario (incluyendo adjuntar CV) antes de exportar el recibo.', 'error');
+                    return;
+                }
+
+                // Crear un nuevo documento PDF usando jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Definir colores para el PDF
+                const RED = '#e53e3e';
+                const BLUE = '#3182ce';
+                const BLACK = '#333333';
+                const GRAY = '#666666';
+
+                // Título del recibo
+                doc.setFont('Inter', 'bold');
+                doc.setFontSize(22);
+                doc.setTextColor(RED);
+                doc.text("Recibo de Inscripción SILACORP", 105, 20, null, null, "center");
+
+                let yPos = 40; // Posición inicial Y para el contenido
+
+                // Función para añadir una sección al PDF
+                function addSection(label, value) {
+                    doc.setFont('Inter', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(RED);
+                    doc.text(`${label}:`, 20, yPos);
+                    doc.line(20, yPos + 2, 190, yPos + 2); // Divisor
+                    yPos += 8; // Espacio después de la línea
+
+                    doc.setFont('Inter', 'normal');
+                    doc.setFontSize(12);
+                    doc.setTextColor(BLUE); // Color azul para la respuesta del usuario
+                    doc.text(value, 20, yPos);
+                    yPos += 12; // Espacio para la siguiente línea
+                }
+
+                // Datos del Inscrito
+                doc.setFont('Inter', 'bold');
+                doc.setFontSize(14);
+                doc.setTextColor(BLACK);
+                doc.text("Datos del Inscrito", 20, yPos);
+                yPos += 10;
+                addSection("Nombre", name);
+                addSection("Fecha de Nacimiento", dob);
+                addSection("Teléfono", phone);
+                addSection("Email", email);
+                addSection("Ciudad", city);
+                addSection("Estado", state);
+                
+                // Detalles del Curso
+                yPos += 10; // Espacio entre secciones principales
+                doc.setFont('Inter', 'bold');
+                doc.setFontSize(14);
+                doc.setTextColor(BLACK);
+                doc.text("Detalles del Curso", 20, yPos);
+                yPos += 10;
+                addSection("Curso", course);
+                addSection("Modalidad", modality);
+
+                // Comentarios (si existen)
+                if (comments) {
+                    yPos += 10;
+                    doc.setFont('Inter', 'bold');
+                    doc.setFontSize(14);
+                    doc.setTextColor(BLACK);
+                    doc.text("Comentarios", 20, yPos);
+                    yPos += 10;
+                    addSection("Comentarios", comments);
+                }
+
+                // Adjunto CV
+                yPos += 10;
+                doc.setFont('Inter', 'bold');
+                doc.setFontSize(14);
+                doc.setTextColor(BLACK);
+                doc.text("Adjuntos", 20, yPos);
+                yPos += 10;
+                addSection("CV Adjuntado", cvFileName);
+
+
+                // Guardar el PDF con un nombre de archivo
+                doc.save("Recibo_Inscripcion_SILACORP.pdf");
+            });
+        });
+    </script>
+</body>
+</html>
